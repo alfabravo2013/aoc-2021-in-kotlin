@@ -10,11 +10,11 @@ fun main() {
         }
 
         val gammaRate = CharArray(input[0].length) { if (frequencies[it]!! > input.size / 2) '1' else '0' }
-        val epsilonRate = gammaRate.map { if (it == '1') '0' else '1' }
+            .joinToString("")
+            .toInt(2)
 
-        val n1 = gammaRate.joinToString("").toInt(2)
-        val n2 = epsilonRate.joinToString("").toInt(2)
-        return  n1 * n2
+        val epsilonRate = gammaRate.inv().and(if (input[0].length == 5) 0b00011111 else 0b0000111111111111)
+        return  gammaRate * epsilonRate
     }
 
     fun applyBitCriteriaOx(list: List<String>, bit: Int): List<String> {
