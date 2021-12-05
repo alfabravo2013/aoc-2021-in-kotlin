@@ -16,16 +16,20 @@ fun main() {
         }
     }
 
+    fun countIntersections(vectors: List<Vector2D>): Int {
+        return vectors.flatMap { it.toList() }
+            .groupingBy { it }.eachCount()
+            .values.count { it > 1 }
+    }
+
     fun part1(input: List<String>): Int {
         val vectors = convertInputToVectors(input).filter { it.isHorizontal() || it.isVertical() }
-        val map = VentMap(vectors)
-        return map.countIntersections()
+        return countIntersections(vectors)
     }
 
     fun part2(input: List<String>): Int {
         val vectors = convertInputToVectors(input)
-        val map = VentMap(vectors)
-        return map.countIntersections()
+        return countIntersections(vectors)
     }
 
     val testInput = readInput("Day05_test")
@@ -39,7 +43,7 @@ fun main() {
 
 data class Point(val x: Int, val y: Int)
 
-class Vector2D(val start: Point, val end: Point) {
+class Vector2D(private val start: Point, private val end: Point) {
 
     fun isHorizontal(): Boolean = start.x == end.x
 
@@ -68,26 +72,4 @@ class Vector2D(val start: Point, val end: Point) {
             else -> error("Vector can only be vertical, horizontal or diagonal")
         }
     }
-}
-
-class VentMap(vents: List<Vector2D>) {
-    private val map: Array<IntArray>
-
-    init {
-        val points = vents.flatMap { listOf(it.start, it.end).asIterable() }
-        val minX = points.minOf { it.x }
-        val maxX = points.maxOf { it.x }
-        val minY = points.minOf { it.y }
-        val maxY = points.maxOf { it.y }
-        map = Array(maxY - minY + 1) { IntArray(maxX - minX + 1) { 0 } }
-
-        val vectors = vents.map { it.toList() }
-        vectors.forEach { vector ->
-            for (point in vector) {
-                map[point.y - minY][point.x - minX] += 1
-            }
-        }
-    }
-
-    fun countIntersections(): Int = map.flatMap { row -> row.asIterable() }.count { it > 1 }
 }
