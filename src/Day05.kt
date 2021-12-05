@@ -17,9 +17,9 @@ fun main() {
     }
 
     fun countIntersections(vectors: List<Vector2D>): Int {
-        return vectors.flatMap { it.toList() }
+        return vectors.flatMap { vector -> vector.toListOfPoints() }
             .groupingBy { it }.eachCount()
-            .values.count { it > 1 }
+            .values.count { totalCount -> totalCount > 1 }
     }
 
     fun part1(input: List<String>): Int {
@@ -51,7 +51,7 @@ class Vector2D(private val start: Point, private val end: Point) {
 
     fun isDiagonal(): Boolean = abs(start.x - end.x) == abs(start.y - end.y)
 
-    fun toList(): List<Point> {
+    fun toListOfPoints(): List<Point> {
         val minX = min(start.x, end.x)
         val maxX = max(start.x, end.x)
         val minY = min(start.y, end.y)
@@ -63,11 +63,7 @@ class Vector2D(private val start: Point, private val end: Point) {
             isDiagonal() -> {
                 val isAscending = start.x < end.x && start.y < end.y || end.x < start.x && end.y < start.y
                 val diff = abs(start.x - end.x)
-                if (isAscending) {
-                    (0..diff).map { Point(minX + it, minY + it) }
-                } else {
-                    (0..diff).map { Point(minX + it, maxY - it) }
-                }
+                (0..diff).map { Point(minX + it, if (isAscending) minY + it else maxY - it) }
             }
             else -> error("Vector can only be vertical, horizontal or diagonal")
         }
