@@ -12,16 +12,16 @@ fun main() {
         }
 
         for (day in 1..days) {
-            val newGen = (0..8).associateWith { age ->
-                when (age) {
-                    6 -> population.getOrElse(7) { 0L } + population.getOrElse(0) { 0L }
-                    8 -> population.getOrElse(0) { 0L }
-                    else -> population.getOrElse(age + 1) { 0L }
+            val newGeneration = (0..8).associateWith { daysUntilSpawning ->
+                when (daysUntilSpawning) {
+                    6 -> population[7]!! + population[0]!!
+                    8 -> population[0]!!
+                    else -> population[daysUntilSpawning + 1]!!
                 }
             }
 
-            newGen.entries.forEach { ng ->
-                population[ng.key] = ng.value
+            newGeneration.entries.forEach { generation ->
+                population[generation.key] = generation.value
             }
         }
 
@@ -37,7 +37,7 @@ fun main() {
     }
 
     val testInput = readInput("Day06_test")
-    check(part1(testInput) == 5934L) // == 5934L
+    check(part1(testInput) == 5934L)
     check(part2(testInput) == 26984457539L)
 
     val input = readInput("Day06")
