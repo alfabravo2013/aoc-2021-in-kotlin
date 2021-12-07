@@ -1,8 +1,5 @@
 import kotlin.math.abs
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
-@OptIn(ExperimentalTime::class)
 fun main() {
 
     fun sumOfSeries(n: Int): Int = (n * (n + 1)) / 2
