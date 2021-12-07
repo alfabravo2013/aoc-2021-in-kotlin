@@ -12,18 +12,25 @@ fun main() {
         val positions = input.single().split(',').map { it.toInt() }.sorted()
         val distribution = positions.groupingBy { it }.eachCount()
 
-        var leftSum: Int
-        var rightSum: Int
-        var minSum = Int.MAX_VALUE
+        var minFuel = Int.MAX_VALUE
+        var start = positions.first()
+        var end = positions.last()
 
-        for (cur in positions.first()..positions.last()) {
-            leftSum = distribution.entries.filter { it.key < cur }.sumOf { reducer.invoke(it, cur) }
-            rightSum = distribution.entries.filter { it.key > cur }.sumOf { reducer.invoke(it, cur) }
-            if (minSum > leftSum + rightSum) {
-                minSum = leftSum + rightSum
+        while (start < end) {
+            val med = (start + end) / 2
+            val fuelToStart = distribution.entries.sumOf { reducer.invoke(it, start) }
+            val fuelToMid = distribution.entries.sumOf { reducer.invoke(it, med) }
+            val fuelToEnd = distribution.entries.sumOf { reducer.invoke(it, end) }
+            when {
+                fuelToMid in (fuelToStart + 1) until fuelToEnd -> end = med - 1
+                fuelToMid in (fuelToEnd + 1) until fuelToStart -> start = med + 1
+                fuelToMid < fuelToStart && fuelToMid < fuelToEnd && fuelToStart < fuelToEnd -> end = med - 1
+                else -> start = med + 1
             }
+            minFuel = listOf(fuelToStart, fuelToMid, fuelToEnd).minOf { it }
         }
-        return minSum
+
+        return minFuel
     }
 
     fun part1(input: List<String>): Int = findMinimum(input, ::part1Reduce)
