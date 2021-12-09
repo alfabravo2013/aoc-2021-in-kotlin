@@ -1,34 +1,33 @@
-import java.util.*
-
 fun main() {
 
-    fun Tile.findAdjacentTiles(tiles: List<List<Tile>>): List<Tile> {
+    fun List<List<Tile>>.neighborsOf(tile: Tile): List<Tile> {
+        val (row, col) = tile
         return when (row) {
             0 -> {
                 when (col) {
-                    0 -> listOf(tiles[col][row + 1], tiles[row][col + 1])
-                    tiles[row].lastIndex -> listOf(tiles[row + 1][col], tiles[row][col - 1])
-                    else -> listOf(tiles[row + 1][col], tiles[row][col - 1], tiles[row][col + 1])
+                    0 -> listOf(this[col][row + 1], this[row][col + 1])
+                    this[row].lastIndex -> listOf(this[row + 1][col], this[row][col - 1])
+                    else -> listOf(this[row + 1][col], this[row][col - 1], this[row][col + 1])
                 }
             }
-            tiles.lastIndex -> {
+            lastIndex -> {
                 when (col) {
-                    0 -> listOf(tiles[row - 1][col], tiles[row][col + 1])
-                    tiles[row].lastIndex -> listOf(tiles[row - 1][col], tiles[row][col - 1])
-                    else -> listOf(tiles[row - 1][col], tiles[row][col - 1], tiles[row][col + 1])
+                    0 -> listOf(this[row - 1][col], this[row][col + 1])
+                    this[row].lastIndex -> listOf(this[row - 1][col], this[row][col - 1])
+                    else -> listOf(this[row - 1][col], this[row][col - 1], this[row][col + 1])
                 }
             }
             else -> {
                 when (col) {
-                    0 -> listOf(tiles[row - 1][col], tiles[row][col + 1], tiles[row + 1][col])
-                    tiles[row].lastIndex -> listOf(tiles[row - 1][col], tiles[row][col - 1], tiles[row + 1][col])
-                    else -> listOf(tiles[row - 1][col], tiles[row][col - 1], tiles[row + 1][col], tiles[row][col + 1])
+                    0 -> listOf(this[row - 1][col], this[row][col + 1], this[row + 1][col])
+                    this[row].lastIndex -> listOf(this[row - 1][col], this[row][col - 1], this[row + 1][col])
+                    else -> listOf(this[row - 1][col], this[row][col - 1], this[row + 1][col], this[row][col + 1])
                 }
             }
         }
     }
 
-    fun buildHeatMap(input: List<String>): List<List<Tile>> {
+    fun heatMapFrom(input: List<String>): List<List<Tile>> {
         return input.mapIndexed { row, line ->
             line.toList().mapIndexed { col, char ->
                 Tile(row, col, char.digitToInt())
@@ -36,28 +35,30 @@ fun main() {
         }
     }
 
-    fun Tile.isLowPoint(adjacent: List<Tile>): Boolean {
-        return adjacent.all { height < it.height }
+    fun Tile.isLowestAmong(neighbors: List<Tile>): Boolean {
+        return neighbors.all { height < it.height }
     }
 
     fun part1(input: List<String>): Int {
-        val heatMap = buildHeatMap(input)
-
+        val heatMap = heatMapFrom(input)
         var lowPoints = 0
+
         for (row in heatMap.indices) {
             for (col in heatMap[row].indices) {
                 val tile = heatMap[row][col]
-                val adjacentTiles = tile.findAdjacentTiles(heatMap)
-                if (tile.isLowPoint(adjacentTiles)) {
+                val neighbors = heatMap.neighborsOf(tile)
+
+                if (tile.isLowestAmong(neighbors)) {
                     lowPoints += tile.height + 1
                 }
             }
         }
+
         return lowPoints
     }
 
     fun part2(input: List<String>): Int {
-        val heatMap = buildHeatMap(input)
+        val heatMap = heatMapFrom(input)
         val basins = mutableListOf<Int>()
         val queue = ArrayDeque<Tile>()
 
@@ -73,10 +74,13 @@ fun main() {
 
                 while (queue.isNotEmpty()) {
                     val current = queue.removeFirst().also { currentBasin++ }
-                    val adjacent = current.findAdjacentTiles(heatMap)
-                    adjacent.filter { t -> !t.marked && t.height != 9 }
-                        .forEach { t -> queue.addLast(t).also { t.marked = true } }
+                    val neighbors = heatMap.neighborsOf(current)
+
+                    neighbors.filter { neighbor -> !neighbor.marked && neighbor.height != 9 }
+                        .forEach { neighbor ->
+                            queue.addLast(neighbor).also { neighbor.marked = true } }
                 }
+
                 basins.add(currentBasin)
             }
         }
