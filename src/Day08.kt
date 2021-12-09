@@ -7,17 +7,17 @@ fun main() {
             .count { digit -> digit.length in setOf(2, 3, 4, 7) }
     }
 
-    fun mapDigits(string: String): Map<String, String> {
-        val samples =  string.split(' ').map { it.toSet() }
+    fun String.toMapOfDigits(): Map<String, String> {
+        val samples = split(' ').map { it.toSet() }
         val digit1 = samples.first { it.size == 2 }
         val digit7 = samples.first { it.size == 3 }
         val digit4 = samples.first { it.size == 4 }
         val digit8 = samples.first { it.size == 7 }
-        val sixSegments = samples.filter { it.size == 6 } //
+        val sixSegments = samples.filter { it.size == 6 }
         val digit9 = sixSegments.first { it.containsAll(digit4) }
         val digit6 = sixSegments.first { !it.containsAll(digit1) }
         val digit0 = sixSegments.first { !it.containsAll(digit9) && !it.containsAll(digit6) }
-        val fiveSegments = samples.filter { it.size == 5 } //
+        val fiveSegments = samples.filter { it.size == 5 }
         val digit3 = fiveSegments.first { it.containsAll(digit1) }
         val digit2 = fiveSegments.first { it.contains(digit0.first { segment -> !digit9.contains(segment) }) }
         val digit5 = fiveSegments.first { !it.containsAll(digit2) && !it.containsAll(digit3) }
@@ -28,20 +28,19 @@ fun main() {
             }.toMap()
     }
 
-    fun decipherReadings(map: Map<String, String>, readings: String): Int {
-        return readings.split(' ')
-            .joinToString("") { reading ->
-                map[reading.toList().sorted().joinToString("")] ?: error("Can't decipher $reading")
-            }.toInt()
+    fun String.decipherWith(map: Map<String, String>): Int {
+        return split(' ').joinToString("") { reading ->
+            val orderedSegments = reading.toList().sorted().joinToString("")
+            map[orderedSegments] ?: error("Can't decipher $reading")
+        }.toInt()
     }
 
     fun part2(input: List<String>): Int {
         return input
-            .map { line -> line.split(" | ") }
-            .map { parts ->
-                val map = mapDigits(parts[0])
-                decipherReadings(map, parts[1])
-            }.sumOf { it }
+            .map { line -> line.split(" | ") }.sumOf { parts ->
+                val map = parts[0].toMapOfDigits()
+                parts[1].decipherWith(map)
+            }
     }
 
     val testInput = readInput("Day08_test")
