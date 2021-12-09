@@ -2,29 +2,13 @@ fun main() {
 
     fun List<List<Tile>>.neighborsOf(tile: Tile): List<Tile> {
         val (row, col) = tile
-        return when (row) {
-            0 -> {
-                when (col) {
-                    0 -> listOf(this[col][row + 1], this[row][col + 1])
-                    this[row].lastIndex -> listOf(this[row + 1][col], this[row][col - 1])
-                    else -> listOf(this[row + 1][col], this[row][col - 1], this[row][col + 1])
-                }
-            }
-            lastIndex -> {
-                when (col) {
-                    0 -> listOf(this[row - 1][col], this[row][col + 1])
-                    this[row].lastIndex -> listOf(this[row - 1][col], this[row][col - 1])
-                    else -> listOf(this[row - 1][col], this[row][col - 1], this[row][col + 1])
-                }
-            }
-            else -> {
-                when (col) {
-                    0 -> listOf(this[row - 1][col], this[row][col + 1], this[row + 1][col])
-                    this[row].lastIndex -> listOf(this[row - 1][col], this[row][col - 1], this[row + 1][col])
-                    else -> listOf(this[row - 1][col], this[row][col - 1], this[row + 1][col], this[row][col + 1])
-                }
-            }
-        }
+        return listOf(
+            row - 1 to col,
+            row to col - 1,
+            row + 1 to col,
+            row to col + 1
+        ).filter { it.first in 0..lastIndex && it.second in 0..this[it.first].lastIndex }
+            .map { this[it.first][it.second] }
     }
 
     fun heatMapFrom(input: List<String>): List<List<Tile>> {
@@ -39,50 +23,46 @@ fun main() {
         return neighbors.all { height < it.height }
     }
 
-    fun part1(input: List<String>): Int {
-        val heatMap = heatMapFrom(input)
-        var lowPoints = 0
-
-        for (row in heatMap.indices) {
-            for (col in heatMap[row].indices) {
-                val tile = heatMap[row][col]
-                val neighbors = heatMap.neighborsOf(tile)
-
+    fun List<List<Tile>>.findLowestPoints(): List<Tile> {
+        val list = mutableListOf<Tile>()
+        for (row in indices) {
+            for (col in this[row].indices) {
+                val tile = this[row][col]
+                val neighbors = neighborsOf(tile)
                 if (tile.isLowestAmong(neighbors)) {
-                    lowPoints += tile.height + 1
+                    list.add(tile)
                 }
             }
         }
+        return list
+    }
 
-        return lowPoints
+    fun part1(input: List<String>): Int {
+        val heatMap = heatMapFrom(input)
+        val lowestPoints = heatMap.findLowestPoints()
+        return lowestPoints.sumOf { it.height + 1 }
     }
 
     fun part2(input: List<String>): Int {
         val heatMap = heatMapFrom(input)
+        val lowestPoints = heatMap.findLowestPoints()
         val basins = mutableListOf<Int>()
         val queue = ArrayDeque<Tile>()
 
-        for (row in heatMap.indices) {
-            for (col in heatMap[row].indices) {
-                val tile = heatMap[row][col]
-                if (tile.marked || tile.height == 9) {
-                    continue
+        for (tile in lowestPoints) {
+            var currentBasin = 0
+            queue.addLast(tile).also { tile.marked = true }
+
+            while (queue.isNotEmpty()) {
+                val current = queue.removeFirst().also { currentBasin++ }
+                val neighbors = heatMap.neighborsOf(current).filter { !it.marked && it.height != 9 }
+
+                for (neighbor in neighbors) {
+                    queue.addLast(neighbor)
+                    neighbor.marked = true
                 }
-
-                var currentBasin = 0
-                queue.addLast(tile).also { tile.marked = true }
-
-                while (queue.isNotEmpty()) {
-                    val current = queue.removeFirst().also { currentBasin++ }
-                    val neighbors = heatMap.neighborsOf(current)
-
-                    neighbors.filter { neighbor -> !neighbor.marked && neighbor.height != 9 }
-                        .forEach { neighbor ->
-                            queue.addLast(neighbor).also { neighbor.marked = true } }
-                }
-
-                basins.add(currentBasin)
             }
+            basins.add(currentBasin)
         }
 
         return basins.sorted().takeLast(3).reduce { acc, i -> acc * i }
