@@ -24,68 +24,47 @@ fun main() {
         map: Map<String, Set<String>>,
         start: String,
         visited: MutableSet<String> = mutableSetOf(),
-        special: MutableMap<String, Int>? = null
-    ): Int {
-
-        if (special != null) {
-            if (special.containsKey(start)) {
-                if (special[start]!! > 0) {
-                    visited.add(start)
-                }
-            } else {
-                if (start.isNotBig() && start != "end") {
-                    visited.add(start)
-                }
-            }
-        } else {
-            if (start.isNotBig() && start != "end") {
-                visited.add(start)
-            }
-        }
-
+        path: MutableList<String> = mutableListOf(),
+        result: MutableSet<List<String>>,
+        special: String? = null
+    ) {
+        path.add(start)
         if (start == "end") {
-            return 1
+            result.add(path)
+            return
         }
 
-        val unvisited = (map[start]!! - visited).toMutableSet()
-
-        if (unvisited.isEmpty()) {
-            return 0
+        if (start.isNotBig() && start != "end") {
+            visited.add(start)
         }
 
-        var count = 0
+        val unvisited = map[start]!! - visited
+        if (special != null && start == special && path.count{ it == start } < 2) {
+            visited.remove(special)
+        }
+
         for (cave in unvisited) {
-            val copy = mutableSetOf<String>()
-            copy.addAll(visited)
-
-            val newSpecial = if (special == null) null else mutableMapOf<String, Int>()
-            if (newSpecial != null) {
-                val key = special!!.keys.first()
-                val value = if (special.containsKey(start)) special[key]!! + 1 else special[key]!!
-                newSpecial[key] = value
-            }
-
-            count += countPaths(map, cave, copy, newSpecial)
+            val visitedSoFar = mutableSetOf<String>()
+            visitedSoFar.addAll(visited)
+            countPaths(map, cave, visitedSoFar, path.toMutableList(), result, special)
         }
-
-        return count
     }
 
     fun part1(input: List<String>): Int {
         val map = buildCaves(input)
-        return countPaths(map, "start")
+        val result = mutableSetOf<List<String>>()
+        countPaths(map, "start", result = result)
+        return result.size
     }
 
     fun part2(input: List<String>): Int {
         val map = buildCaves(input)
-        val smallCaves = map.keys.filter { it != "start" && it != "end" && it.isNotBig() }
-        var count = 0
-        println(smallCaves)
-        for (cave in smallCaves) {
-            count += countPaths(map, "start", special = mutableMapOf(cave to 0))
+        val result = mutableSetOf<List<String>>()
+        val caves = map.keys.filter { it.isNotBig() && it != "start" && it != "end" }
+        for (cave in caves) {
+            countPaths(map, "start", special = cave, result = result)
         }
-        println(count)
-        return count
+        return result.size
     }
 
     val testInput1 = readInput("Day12_test1")
@@ -95,9 +74,9 @@ fun main() {
     check(part1(testInput2) == 19)
     check(part1(testInput3) == 226)
 
-    check(part2(testInput1) != 36)
-    check(part2(testInput2) != 103)
-    check(part2(testInput3) != 3509)
+    check(part2(testInput1) == 36)
+    check(part2(testInput2) == 103)
+    check(part2(testInput3) == 3509)
 
     val input = readInput("Day12")
     println(part1(input))
